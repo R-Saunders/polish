@@ -200,7 +200,7 @@ export function AddTaskModal({ roomId, onClose, onSave }: AddTaskModalProps) {
 								value={name}
 								onChange={(e) => setName(e.target.value)}
 								placeholder="e.g., Clean the windows"
-								className="input-field"
+								className="input-field w-full"
 							/>
 						</div>
 

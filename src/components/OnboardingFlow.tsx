@@ -178,7 +178,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
 								value={householdName}
 								onChange={(e) => setHouseholdName(e.target.value)}
 								placeholder="e.g., The Smiths"
-								className="input-field"
+								className="input-field w-full"
 							/>
 						</div>
 
@@ -350,7 +350,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
 								onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
 								placeholder="ABC123"
 								maxLength={6}
-								className="input-field text-center text-2xl tracking-widest uppercase"
+								className="input-field w-full text-center text-2xl tracking-widest uppercase"
 							/>
 						</div>
 

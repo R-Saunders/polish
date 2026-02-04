@@ -99,7 +99,7 @@ export function AddRoomModal({
 						value={name}
 						onChange={(e) => setName(e.target.value)}
 						placeholder="e.g., Master Bedroom"
-						className="input-field"
+						className="input-field w-full"
 					/>
 				</div>
 
@@ -113,7 +113,7 @@ export function AddRoomModal({
 							type="text"
 							value={icon}
 							onChange={(e) => setIcon(e.target.value)}
-							className="input-field text-center text-2xl"
+							className="input-field w-full text-center text-2xl"
 							maxLength={2}
 						/>
 					</div>
