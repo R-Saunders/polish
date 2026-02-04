@@ -1,0 +1,78 @@
+"use client";
+
+import type { User } from "@/types";
+
+interface LeaderboardProps {
+	members: User[];
+	currentUserId?: string;
+}
+
+export function Leaderboard({ members, currentUserId }: LeaderboardProps) {
+	const sortedMembers = [...members].sort(
+		(a, b) => b.total_points - a.total_points,
+	);
+
+	const getMedalEmoji = (rank: number) => {
+		switch (rank) {
+			case 0:
+				return "🥇";
+			case 1:
+				return "🥈";
+			case 2:
+				return "🥉";
+			default:
+				return `${rank + 1}`;
+		}
+	};
+
+	return (
+		<div className="space-y-4">
+			<h3 className="text-lg font-semibold">Household Rankings</h3>
+
+			{sortedMembers.length === 0 ? (
+				<div className="text-center py-12 text-slate-400 glass-card">
+					<p className="text-4xl mb-4">🏆</p>
+					<p>No members yet. Invite your household!</p>
+				</div>
+			) : (
+				<div className="space-y-3">
+					{sortedMembers.map((member, index) => (
+						<div
+							key={member.id}
+							className={`glass-card p-4 flex items-center gap-4 ${
+								member.id === currentUserId ? "ring-2 ring-indigo-500" : ""
+							}`}
+						>
+							<span className="text-2xl w-10 text-center">
+								{getMedalEmoji(index)}
+							</span>
+
+							<div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-400 to-purple-400 flex items-center justify-center text-lg font-bold">
+								{member.name?.[0]?.toUpperCase() || "?"}
+							</div>
+
+							<div className="flex-1">
+								<p className="font-medium">
+									{member.name || "Anonymous"}
+									{member.id === currentUserId && (
+										<span className="text-indigo-400 text-sm ml-2">(you)</span>
+									)}
+								</p>
+								<div className="flex items-center gap-3 text-sm text-slate-400">
+									<span>🔥 {member.current_streak} day streak</span>
+								</div>
+							</div>
+
+							<div className="text-right">
+								<p className="text-2xl font-bold text-indigo-400">
+									{member.total_points}
+								</p>
+								<p className="text-xs text-slate-400">points</p>
+							</div>
+						</div>
+					))}
+				</div>
+			)}
+		</div>
+	);
+}
