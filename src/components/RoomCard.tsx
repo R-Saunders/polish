@@ -38,17 +38,31 @@ export function RoomCard({
       return statusA.daysDiff - statusB.daysDiff;
     });
 
-  // Check completion rate logic
-  // We calculate rate based on "Today's Status" usually?
-  // Or "Current Health" of the room (are things overdue?)
-  // Let's stick to "Percentage of tasks NOT overdue" for health ring.
-  const overdueCount = tasks.filter(
+  // Calculate health/progress
+  // 1. Filter out completed one-off tasks (they shouldn't count towards total or outstanding)
+  const activeTasks = tasks.filter((t) => {
+    if (!t.recurrence_type && t.last_completed) return false;
+    return true;
+  });
+
+  // 2. Count outstanding tasks (Overdue OR Due Today)
+  const outstandingCount = activeTasks.filter((t) => {
+    const status = getTaskStatus(t).status;
+    return status === "overdue" || status === "due_today";
+  }).length;
+
+  // Needed for UI color logic (Amber if overdue)
+  const overdueCount = activeTasks.filter(
     (t) => getTaskStatus(t).status === "overdue"
   ).length;
 
+  // 3. Calculate percentage based on active tasks
+  // 3. Calculate percentage based on active tasks
   const completionRate =
-    tasks.length > 0
-      ? Math.round(((tasks.length - overdueCount) / tasks.length) * 100)
+    activeTasks.length > 0
+      ? Math.round(
+          ((activeTasks.length - outstandingCount) / activeTasks.length) * 100
+        )
       : 100;
 
   return (
