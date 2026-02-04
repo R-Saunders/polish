@@ -39,15 +39,12 @@ export function RoomCard({
 
   const outstandingTasks = tasks
     .filter((t) => {
-      // If completed today, it's not outstanding for "now" context usually?
-      // Actually user wants "Next due... if today or future".
-      // If completed TODAY, it's done for today.
-      // If completed yesterday, it might be due today.
-      if (
-        t.last_completed &&
-        new Date(t.last_completed).toDateString() === new Date().toDateString()
-      )
-        return false;
+      // Hide completed one-off tasks from "Next Due"
+      // They will appear in "Last Completed" history only.
+      if (!t.recurrence_type && t.last_completed) return false;
+
+      // Recurring tasks are always shown in "Next Due" because they always have a future schedule,
+      // even if completed today (e.g. Weekly completed today -> Due next week).
       return true;
     })
     .sort((a, b) => {
