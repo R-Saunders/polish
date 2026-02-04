@@ -1,4 +1,4 @@
-// Core types for ChoreShare
+// Core types for Polish
 
 export interface Pet {
   type: "dog" | "cat" | "other";

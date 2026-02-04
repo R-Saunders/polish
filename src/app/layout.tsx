@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ChoreShare - Household Chores Made Easy",
+  title: "Polish - Household Chores Made Easy",
   description: "Share and manage household chores with your family",
 };
 

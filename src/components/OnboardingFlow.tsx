@@ -127,7 +127,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
       {/* Step: Choice */}
       {step === "choice" && (
         <div className="text-center">
-          <h2 className="mb-2 text-3xl font-bold">Welcome to ChoreShare! 🏠</h2>
+          <h2 className="mb-2 text-3xl font-bold">Welcome to Polish! 🏠</h2>
           <p className="mb-8 text-slate-400">
             Let&apos;s get your household set up
           </p>

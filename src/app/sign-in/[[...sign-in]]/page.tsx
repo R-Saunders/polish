@@ -6,7 +6,7 @@ export default function SignInPage() {
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
           <h1 className="bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-4xl font-bold text-transparent">
-            ChoreShare
+            Polish
           </h1>
           <p className="mt-2 text-slate-400">Household chores made easy</p>
         </div>
