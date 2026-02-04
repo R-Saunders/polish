@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useUser } from "@clerk/nextjs";
 import { supabase } from "@/lib/supabase";
+import { getNextDueDate } from "@/lib/scheduling";
 import type { Household, Room, Task, User } from "@/types";
 import { RoomCard } from "./RoomCard";
 import { AddRoomModal } from "./AddRoomModal";
@@ -150,6 +151,36 @@ export function Dashboard() {
       .from("tasks")
       .update({ last_completed: new Date().toISOString() })
       .eq("id", taskId);
+
+    loadData();
+  };
+
+  const advanceTask = async (taskId: string) => {
+    if (!currentUser) return;
+
+    const task = tasks.find((t) => t.id === taskId);
+    if (!task) return;
+
+    const nextDue = getNextDueDate(task);
+
+    // Add completion record (Points tracked NOW)
+    await supabase.from("completions").insert({
+      task_id: taskId,
+      completed_by: currentUser.id,
+      points_earned: task.effort_points,
+    });
+
+    // Update task last_completed to the FUTURE due date
+    await supabase
+      .from("tasks")
+      .update({ last_completed: nextDue.toISOString() })
+      .eq("id", taskId);
+
+    // Update user points
+    await supabase
+      .from("users")
+      .update({ total_points: currentUser.total_points + task.effort_points })
+      .eq("id", currentUser.id);
 
     loadData();
   };
@@ -305,6 +336,7 @@ export function Dashboard() {
                     }}
                     onTaskComplete={completeTask}
                     onSkip={skipTask}
+                    onAdvance={advanceTask}
                   />
                 ))}
             </div>
@@ -344,6 +376,7 @@ export function Dashboard() {
                   }}
                   onTaskComplete={completeTask}
                   onSkip={skipTask}
+                  onAdvance={advanceTask}
                 />
               ))}
             </div>

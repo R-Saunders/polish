@@ -9,6 +9,7 @@ interface RoomCardProps {
   onAddTask: () => void;
   onTaskComplete: (taskId: string) => void;
   onSkip?: (taskId: string) => void;
+  onAdvance?: (taskId: string) => void;
   variant?: "daily" | "overview";
 }
 
@@ -18,6 +19,7 @@ export function RoomCard({
   onAddTask,
   onTaskComplete,
   onSkip,
+  onAdvance,
   variant = "daily",
 }: RoomCardProps) {
   // Logic for "Daily" mode (Progress based on today's tasks)
@@ -117,6 +119,7 @@ export function RoomCard({
                   isCompleted={!!isCompletedToday}
                   onComplete={() => onTaskComplete(task.id)}
                   onSkip={() => onSkip?.(task.id)}
+                  onAdvance={() => onAdvance?.(task.id)}
                   showDates={variant === "overview"}
                 />
               );
@@ -140,12 +143,14 @@ function TaskItem({
   isCompleted,
   onComplete,
   onSkip,
+  onAdvance,
   showDates,
 }: {
   task: Task;
   isCompleted: boolean;
   onComplete: () => void;
   onSkip?: () => void;
+  onAdvance?: () => void;
   showDates?: boolean;
 }) {
   const status = getTaskStatus(task);
@@ -199,10 +204,9 @@ function TaskItem({
                     : ""
               }`}
             >
-              {status.status === "overdue" ? "Due " : ""}
               {status.status === "due_today"
                 ? "Due Today"
-                : formatDate(nextDue.toISOString())}
+                : `Due: ${formatDate(nextDue.toISOString())}`}
               {status.status === "overdue" &&
                 ` (${Math.abs(status.daysDiff)}d late)`}
             </span>
@@ -239,6 +243,19 @@ function TaskItem({
               Still clean?
             </button>
           )}
+
+        {/* Advance Button (Mark Next Done) */}
+        {isCompleted && onAdvance && task.recurrence_type && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onAdvance();
+            }}
+            className="rounded bg-white/10 px-2 py-0.5 text-[10px] font-medium whitespace-nowrap text-indigo-300 hover:bg-indigo-500/20 hover:text-indigo-200"
+          >
+            Mark Next Done
+          </button>
+        )}
       </div>
     </div>
   );
