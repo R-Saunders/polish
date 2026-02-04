@@ -436,3 +436,57 @@ export function adjustFrequency(
 
 	return baseFrequency;
 }
+
+// Suggest category based on room name
+export function suggestCategoryForRoom(roomName: string): string {
+	const name = roomName.toLowerCase();
+
+	if (
+		name.includes("kitchen") ||
+		name.includes("dining") ||
+		name.includes("pantry") ||
+		name.includes("scullery")
+	) {
+		return "Kitchen";
+	}
+	if (
+		name.includes("bath") ||
+		name.includes("toilet") ||
+		name.includes("shower") ||
+		name.includes("ensuite") ||
+		name.includes("en-suite") ||
+		name.includes("wc")
+	) {
+		return "Bathroom";
+	}
+	if (
+		name.includes("living") ||
+		name.includes("lounge") ||
+		name.includes("sitting") ||
+		name.includes("family") ||
+		name.includes("tv") ||
+		name.includes("drawing")
+	) {
+		return "Living Room";
+	}
+	if (
+		name.includes("bed") ||
+		name.includes("nursery") ||
+		name.includes("guest") ||
+		name.includes("wardrobe")
+	) {
+		return "Bedroom";
+	}
+	if (
+		name.includes("laundry") ||
+		name.includes("utility") ||
+		name.includes("wash")
+	) {
+		return "Laundry";
+	}
+
+	// Default to logic based on first available if no match,
+	// but the caller can handle the fallback.
+	// We return 'Whole House' as a safe generic if nothing matches specific rooms.
+	return "Whole House";
+}

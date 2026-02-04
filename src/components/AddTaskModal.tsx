@@ -6,19 +6,26 @@ import {
 	choreLibrary,
 	getAllCategories,
 	getChoresByCategory,
+	suggestCategoryForRoom,
 } from "@/lib/choreLibrary";
 import type { CleaningLevel, RecurrenceType } from "@/types";
 
 interface AddTaskModalProps {
 	roomId: string;
+	roomName: string;
 	onClose: () => void;
 	onSave: () => void;
 }
 
-export function AddTaskModal({ roomId, onClose, onSave }: AddTaskModalProps) {
+export function AddTaskModal({
+	roomId,
+	roomName,
+	onClose,
+	onSave,
+}: AddTaskModalProps) {
 	const [mode, setMode] = useState<"library" | "custom">("library");
 	const [selectedCategory, setSelectedCategory] = useState(
-		getAllCategories()[0],
+		suggestCategoryForRoom(roomName),
 	);
 	const [selectedChore, setSelectedChore] = useState<string | null>(null);
 

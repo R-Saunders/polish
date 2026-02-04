@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useUser } from "@clerk/nextjs";
 import { supabase } from "@/lib/supabase";
 import type { Household, Room, Task, User } from "@/types";
@@ -25,11 +25,7 @@ export function Dashboard() {
 	);
 	const [loading, setLoading] = useState(true);
 
-	useEffect(() => {
-		loadData();
-	}, [clerkUser]);
-
-	const loadData = async () => {
+	const loadData = useCallback(async () => {
 		if (!clerkUser) return;
 
 		try {
@@ -85,7 +81,11 @@ export function Dashboard() {
 		} finally {
 			setLoading(false);
 		}
-	};
+	}, [clerkUser]);
+
+	useEffect(() => {
+		loadData();
+	}, [loadData]);
 
 	const toggleHolidayMode = async () => {
 		if (!household) return;
@@ -394,6 +394,7 @@ export function Dashboard() {
 			{showAddTask && selectedRoomId && (
 				<AddTaskModal
 					roomId={selectedRoomId}
+					roomName={rooms.find((r) => r.id === selectedRoomId)?.name || ""}
 					onClose={() => {
 						setShowAddTask(false);
 						setSelectedRoomId(null);
