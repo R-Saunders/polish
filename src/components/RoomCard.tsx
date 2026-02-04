@@ -8,6 +8,7 @@ interface RoomCardProps {
   tasks: Task[];
   onAddTask: () => void;
   onTaskComplete: (taskId: string) => void;
+  onSkip?: (taskId: string) => void;
   variant?: "daily" | "overview";
 }
 
@@ -16,77 +17,37 @@ export function RoomCard({
   tasks,
   onAddTask,
   onTaskComplete,
+  onSkip,
   variant = "daily",
 }: RoomCardProps) {
   // Logic for "Daily" mode (Progress based on today's tasks)
   // Logic for "Overview" mode (Split lists)
 
-  // Filter tasks
-  const completedToday = tasks.filter((t) => {
-    if (!t.last_completed) return false;
-    return (
-      new Date(t.last_completed).toDateString() === new Date().toDateString()
-    );
-  });
-
-  // For Overview mode, we separate into:
-  // 1. Outstanding (Not completed today, sorted by due date/overdue)
-  // 2. Recently Completed (Completed today or past, sorted by date desc)
-
-  // BUT per request "split by last completed and next due".
-  // "Next Due" = Outstanding tasks.
-  // "Last Completed" = Completed tasks.
-
-  const outstandingTasks = tasks
+  // Unified list logic: Simply sort tasks by urgency
+  const sortedTasks = tasks
     .filter((t) => {
-      // Hide completed one-off tasks from "Next Due"
-      // They will appear in "Last Completed" history only.
+      // Hide completed one-off tasks (they are history)
       if (!t.recurrence_type && t.last_completed) return false;
-
-      // Recurring tasks are always shown in "Next Due" because they always have a future schedule,
-      // even if completed today (e.g. Weekly completed today -> Due next week).
       return true;
     })
     .sort((a, b) => {
       const statusA = getTaskStatus(a);
       const statusB = getTaskStatus(b);
-      return statusA.daysDiff - statusB.daysDiff; // Most overdue first
+      return statusA.daysDiff - statusB.daysDiff;
     });
 
-  const completedTasks = tasks
-    .filter((t) => t.last_completed)
-    .sort((a, b) => {
-      return (
-        new Date(b.last_completed!).getTime() -
-        new Date(a.last_completed!).getTime()
-      );
-    });
-
-  // Calculation for ring depends on mode?
-  // Daily: % of today's tasks done.
-  // Overview: Maybe % of TOTAL tasks that are not overdue?
-  // Let's stick to "Today's compliance" for consistency or just hide ring in overview?
-  // User said "same design", so ring usually stays.
-  // Let's make ring reflect "Current Health" -> % of tasks NOT overdue.
-
+  // Check completion rate logic
+  // We calculate rate based on "Today's Status" usually?
+  // Or "Current Health" of the room (are things overdue?)
+  // Let's stick to "Percentage of tasks NOT overdue" for health ring.
   const overdueCount = tasks.filter(
     (t) => getTaskStatus(t).status === "overdue"
   ).length;
 
-  // If variant is daily, we might pass pre-filtered "today's tasks" only into the component.
-  // Check completion rate logic below.
-
-  const validTasks = variant === "daily" ? tasks : tasks; // potentially redundant but clear
-  const pendingCount = validTasks.filter(
-    (t) => !completedToday.includes(t)
-  ).length;
-
   const completionRate =
-    validTasks.length > 0
-      ? Math.round(
-          ((validTasks.length - pendingCount) / validTasks.length) * 100
-        )
-      : 0;
+    tasks.length > 0
+      ? Math.round(((tasks.length - overdueCount) / tasks.length) * 100)
+      : 100;
 
   return (
     <div className="glass-card flex h-full flex-col p-5">
@@ -117,7 +78,7 @@ export function RoomCard({
               cy="20"
             />
             <circle
-              className={`progress-ring__circle ${variant === "overview" && overdueCount > 0 ? "text-amber-500" : "text-green-400"}`}
+              className={`progress-ring__circle ${overdueCount > 0 ? "text-amber-500" : "text-green-400"}`}
               strokeWidth="4"
               stroke="currentColor"
               fill="transparent"
@@ -135,112 +96,33 @@ export function RoomCard({
       </div>
 
       {/* Content Area */}
-      <div className="custom-scrollbar mb-4 max-h-[300px] flex-1 space-y-4 overflow-y-auto pr-1">
-        {variant === "daily" && (
-          <div className="space-y-2">
-            {tasks.length === 0 ? (
-              <p className="py-4 text-center text-sm text-slate-500">
-                No chores today
-              </p>
-            ) : (
-              tasks.map((task) => {
-                const isCompleted = completedToday.includes(task);
-                return (
-                  <TaskItem
-                    key={task.id}
-                    task={task}
-                    isCompleted={isCompleted}
-                    onComplete={() => onTaskComplete(task.id)}
-                  />
-                );
-              })
-            )}
-          </div>
-        )}
+      <div className="mb-4 flex-1 space-y-4 pr-1">
+        <div className="space-y-2">
+          {sortedTasks.length === 0 ? (
+            <p className="py-4 text-center text-sm text-slate-500">
+              All caught up!
+            </p>
+          ) : (
+            sortedTasks.map((task) => {
+              // Check if completed TODAY for the checkbox state
+              const isCompletedToday =
+                task.last_completed &&
+                new Date(task.last_completed).toDateString() ===
+                  new Date().toDateString();
 
-        {variant === "overview" && (
-          <>
-            {/* Outstanding Section */}
-            <div>
-              <h4 className="mb-2 text-xs font-bold tracking-wider text-slate-400 uppercase">
-                Next Due
-              </h4>
-              {outstandingTasks.length === 0 ? (
-                <p className="text-xs text-slate-500 italic">Nothing pending</p>
-              ) : (
-                <div className="space-y-2">
-                  {outstandingTasks.slice(0, 5).map((task) => {
-                    const status = getTaskStatus(task);
-                    const nextDue = getNextDueDate(task);
-
-                    return (
-                      <div
-                        key={task.id}
-                        className="flex items-center justify-between rounded-lg bg-white/5 p-2"
-                      >
-                        <div className="flex items-center gap-2 overflow-hidden">
-                          <button
-                            onClick={() => onTaskComplete(task.id)}
-                            className="task-checkbox h-4 min-h-[1rem] w-4 min-w-[1rem]"
-                          ></button>
-                          <span className="truncate text-sm">{task.name}</span>
-                        </div>
-                        <div className="flex min-w-[60px] flex-col items-end">
-                          <span
-                            className={`text-[10px] font-medium ${
-                              status.status === "overdue"
-                                ? "text-red-400"
-                                : status.status === "due_today"
-                                  ? "text-green-400"
-                                  : "text-slate-400"
-                            }`}
-                          >
-                            {status.status === "overdue"
-                              ? `${Math.abs(status.daysDiff)}d Late`
-                              : status.status === "due_today"
-                                ? "Today"
-                                : formatDate(nextDue.toISOString())}
-                          </span>
-                        </div>
-                      </div>
-                    );
-                  })}
-                  {outstandingTasks.length > 5 && (
-                    <p className="text-center text-xs text-slate-500">
-                      +{outstandingTasks.length - 5} more
-                    </p>
-                  )}
-                </div>
-              )}
-            </div>
-
-            {/* Completed Section */}
-            <div>
-              <h4 className="mt-4 mb-2 text-xs font-bold tracking-wider text-slate-400 uppercase">
-                Last Completed
-              </h4>
-              {completedTasks.length === 0 ? (
-                <p className="text-xs text-slate-500 italic">No history</p>
-              ) : (
-                <div className="space-y-2">
-                  {completedTasks.slice(0, 3).map((task) => (
-                    <div
-                      key={task.id}
-                      className="flex items-center justify-between rounded-lg p-2 opacity-60"
-                    >
-                      <span className="mr-2 flex-1 truncate text-sm line-through">
-                        {task.name}
-                      </span>
-                      <span className="text-[10px] whitespace-nowrap text-slate-400">
-                        {formatDate(task.last_completed!)}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </>
-        )}
+              return (
+                <TaskItem
+                  key={task.id}
+                  task={task}
+                  isCompleted={!!isCompletedToday}
+                  onComplete={() => onTaskComplete(task.id)}
+                  onSkip={() => onSkip?.(task.id)}
+                  showDates={variant === "overview"}
+                />
+              );
+            })
+          )}
+        </div>
       </div>
 
       <button
@@ -257,21 +139,28 @@ function TaskItem({
   task,
   isCompleted,
   onComplete,
+  onSkip,
+  showDates,
 }: {
   task: Task;
   isCompleted: boolean;
   onComplete: () => void;
+  onSkip?: () => void;
+  showDates?: boolean;
 }) {
+  const status = getTaskStatus(task);
+  const nextDue = getNextDueDate(task);
+
   return (
     <div
-      className={`flex items-center gap-3 rounded-lg p-2 transition-all ${
-        isCompleted ? "opacity-50" : "hover:bg-white/5"
+      className={`group flex items-start gap-3 rounded-lg p-3 transition-all ${
+        isCompleted ? "opacity-50" : "bg-white/5 hover:bg-white/10"
       }`}
     >
       <button
         onClick={() => !isCompleted && onComplete()}
         disabled={isCompleted}
-        className={`task-checkbox ${isCompleted ? "checked" : ""}`}
+        className={`task-checkbox mt-1 ${isCompleted ? "checked" : ""}`}
       >
         {isCompleted && (
           <svg
@@ -289,18 +178,68 @@ function TaskItem({
           </svg>
         )}
       </button>
-      <span
-        className={`flex-1 text-sm ${isCompleted ? "text-slate-500 line-through" : ""}`}
-      >
-        {task.name}
-      </span>
-      <span
-        className={
-          task.cleaning_level === "deep" ? "badge-deep" : "badge-surface"
-        }
-      >
-        {task.cleaning_level}
-      </span>
+
+      <div className="min-w-0 flex-1">
+        <div
+          className={`text-base font-medium ${isCompleted ? "text-slate-500 line-through" : ""}`}
+        >
+          {task.name}
+        </div>
+
+        {/* Metadata Row */}
+        {showDates && (
+          <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-400">
+            {/* Next Due Date */}
+            <span
+              className={`${
+                status.status === "overdue"
+                  ? "font-medium text-red-400"
+                  : status.status === "due_today"
+                    ? "font-medium text-green-400"
+                    : ""
+              }`}
+            >
+              {status.status === "overdue" ? "Due " : ""}
+              {status.status === "due_today"
+                ? "Due Today"
+                : formatDate(nextDue.toISOString())}
+              {status.status === "overdue" &&
+                ` (${Math.abs(status.daysDiff)}d late)`}
+            </span>
+
+            {/* Last Completed */}
+            {task.last_completed && (
+              <span>Last: {formatDate(task.last_completed)}</span>
+            )}
+          </div>
+        )}
+      </div>
+
+      <div className="flex flex-col items-end gap-2">
+        {/* Badge */}
+        <span
+          className={
+            task.cleaning_level === "deep" ? "badge-deep" : "badge-surface"
+          }
+        >
+          {task.cleaning_level}
+        </span>
+
+        {/* Still Clean Button */}
+        {!isCompleted &&
+          onSkip &&
+          (status.status === "overdue" || status.status === "due_today") && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onSkip();
+              }}
+              className="rounded bg-white/10 px-2 py-0.5 text-[10px] font-medium whitespace-nowrap text-slate-300 hover:bg-white/20 hover:text-white"
+            >
+              Still clean?
+            </button>
+          )}
+      </div>
     </div>
   );
 }

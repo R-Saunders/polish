@@ -132,6 +132,28 @@ export function Dashboard() {
     loadData();
   };
 
+  const skipTask = async (taskId: string) => {
+    if (!currentUser) return;
+
+    const task = tasks.find((t) => t.id === taskId);
+    if (!task) return;
+
+    // Add completion record with 0 points (skipped)
+    await supabase.from("completions").insert({
+      task_id: taskId,
+      completed_by: currentUser.id,
+      points_earned: 0,
+    });
+
+    // Update task last_completed
+    await supabase
+      .from("tasks")
+      .update({ last_completed: new Date().toISOString() })
+      .eq("id", taskId);
+
+    loadData();
+  };
+
   const getTodaysTasks = () => {
     const today = new Date();
     const dayOfWeek = today.getDay(); // 0 = Sunday
@@ -282,6 +304,7 @@ export function Dashboard() {
                       setShowAddTask(true);
                     }}
                     onTaskComplete={completeTask}
+                    onSkip={skipTask}
                   />
                 ))}
             </div>
@@ -320,6 +343,7 @@ export function Dashboard() {
                     setShowAddTask(true);
                   }}
                   onTaskComplete={completeTask}
+                  onSkip={skipTask}
                 />
               ))}
             </div>
