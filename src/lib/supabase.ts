@@ -8,5 +8,5 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // Server-side client for use in Server Components
 export function createServerClient() {
-	return createClient(supabaseUrl, supabaseAnonKey);
+  return createClient(supabaseUrl, supabaseAnonKey);
 }
