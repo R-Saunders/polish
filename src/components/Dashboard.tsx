@@ -20,7 +20,7 @@ export function Dashboard() {
 	const [showAddRoom, setShowAddRoom] = useState(false);
 	const [showAddTask, setShowAddTask] = useState(false);
 	const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
-	const [activeTab, setActiveTab] = useState<"today" | "rooms" | "leaderboard">(
+	const [activeTab, setActiveTab] = useState<"today" | "tasks" | "leaderboard">(
 		"today",
 	);
 	const [loading, setLoading] = useState(true);
@@ -172,7 +172,6 @@ export function Dashboard() {
 
 	const todaysTasks = getTodaysTasks();
 	const pendingTasks = todaysTasks.filter((t) => !isTaskCompletedToday(t));
-	const completedTasks = todaysTasks.filter((t) => isTaskCompletedToday(t));
 
 	return (
 		<div className="pb-20 animate-fade-in">
@@ -218,21 +217,37 @@ export function Dashboard() {
 
 			{/* Tabs */}
 			<div className="flex gap-2 mb-6">
-				{(["today", "rooms", "leaderboard"] as const).map((tab) => (
-					<button
-						key={tab}
-						onClick={() => setActiveTab(tab)}
-						className={`px-4 py-2 rounded-lg font-medium transition-all ${
-							activeTab === tab
-								? "bg-indigo-500 text-white"
-								: "bg-white/5 text-slate-400 hover:bg-white/10"
-						}`}
-					>
-						{tab === "today"
-							? "Today's Tasks"
-							: tab.charAt(0).toUpperCase() + tab.slice(1)}
-					</button>
-				))}
+				{/* Manual tab buttons to ensure correct typing */}
+				<button
+					onClick={() => setActiveTab("today")}
+					className={`px-4 py-2 rounded-lg font-medium transition-all ${
+						activeTab === "today"
+							? "bg-indigo-500 text-white"
+							: "bg-white/5 text-slate-400 hover:bg-white/10"
+					}`}
+				>
+					Today&apos;s Tasks
+				</button>
+				<button
+					onClick={() => setActiveTab("tasks")}
+					className={`px-4 py-2 rounded-lg font-medium transition-all ${
+						activeTab === "tasks"
+							? "bg-indigo-500 text-white"
+							: "bg-white/5 text-slate-400 hover:bg-white/10"
+					}`}
+				>
+					Tasks Overview
+				</button>
+				<button
+					onClick={() => setActiveTab("leaderboard")}
+					className={`px-4 py-2 rounded-lg font-medium transition-all ${
+						activeTab === "leaderboard"
+							? "bg-indigo-500 text-white"
+							: "bg-white/5 text-slate-400 hover:bg-white/10"
+					}`}
+				>
+					Leaderboard
+				</button>
 			</div>
 
 			{/* Today's Tasks Tab */}
@@ -251,94 +266,31 @@ export function Dashboard() {
 							<p className="text-sm">Add some chores to get started.</p>
 						</div>
 					) : (
-						<>
-							{/* Pending tasks */}
-							{pendingTasks.length > 0 && (
-								<div>
-									<h3 className="text-sm font-medium text-slate-400 mb-3">
-										TO DO
-									</h3>
-									<div className="space-y-2">
-										{pendingTasks.map((task) => (
-											<div
-												key={task.id}
-												className="task-card flex items-center gap-4"
-											>
-												<button
-													onClick={() => completeTask(task.id)}
-													className="task-checkbox"
-												></button>
-												<div className="flex-1">
-													<p className="font-medium">{task.name}</p>
-													<p className="text-sm text-slate-400">
-														{rooms.find((r) => r.id === task.room_id)?.name}
-													</p>
-												</div>
-												<span
-													className={
-														task.cleaning_level === "deep"
-															? "badge-deep"
-															: "badge-surface"
-													}
-												>
-													{task.cleaning_level}
-												</span>
-												<span className="text-indigo-400 font-medium">
-													+{task.effort_points}
-												</span>
-											</div>
-										))}
-									</div>
-								</div>
-							)}
-
-							{/* Completed tasks */}
-							{completedTasks.length > 0 && (
-								<div>
-									<h3 className="text-sm font-medium text-slate-400 mb-3">
-										COMPLETED
-									</h3>
-									<div className="space-y-2">
-										{completedTasks.map((task) => (
-											<div
-												key={task.id}
-												className="task-card flex items-center gap-4 opacity-60"
-											>
-												<div className="task-checkbox checked">
-													<svg
-														className="w-4 h-4 text-white"
-														fill="none"
-														viewBox="0 0 24 24"
-														stroke="currentColor"
-													>
-														<path
-															strokeLinecap="round"
-															strokeLinejoin="round"
-															strokeWidth={3}
-															d="M5 13l4 4L19 7"
-														/>
-													</svg>
-												</div>
-												<div className="flex-1">
-													<p className="font-medium line-through">
-														{task.name}
-													</p>
-													<p className="text-sm text-slate-400">
-														{rooms.find((r) => r.id === task.room_id)?.name}
-													</p>
-												</div>
-											</div>
-										))}
-									</div>
-								</div>
-							)}
-						</>
+						<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+							{rooms
+								.filter((room) =>
+									todaysTasks.some((t) => t.room_id === room.id),
+								)
+								.map((room) => (
+									<RoomCard
+										key={room.id}
+										room={room}
+										tasks={todaysTasks.filter((t) => t.room_id === room.id)}
+										variant="daily"
+										onAddTask={() => {
+											setSelectedRoomId(room.id);
+											setShowAddTask(true);
+										}}
+										onTaskComplete={completeTask}
+									/>
+								))}
+						</div>
 					)}
 				</div>
 			)}
 
-			{/* Rooms Tab */}
-			{activeTab === "rooms" && (
+			{/* Tasks Overview Tab (formerly Rooms) */}
+			{activeTab === "tasks" && (
 				<div>
 					<div className="flex items-center justify-between mb-4">
 						<h3 className="text-lg font-semibold">Your Rooms</h3>
@@ -362,6 +314,7 @@ export function Dashboard() {
 									key={room.id}
 									room={room}
 									tasks={tasks.filter((t) => t.room_id === room.id)}
+									variant="overview"
 									onAddTask={() => {
 										setSelectedRoomId(room.id);
 										setShowAddTask(true);

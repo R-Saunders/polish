@@ -53,6 +53,7 @@ export interface Task {
 	last_completed: string | null;
 	assigned_to: string | null;
 	is_from_library: boolean;
+	created_at: string;
 }
 
 export interface Completion {
