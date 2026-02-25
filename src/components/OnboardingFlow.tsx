@@ -63,7 +63,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
       const { error: userError } = await supabase.from("users").upsert({
         clerk_id: user.id,
         name: user.fullName || user.firstName || "User",
-        avatar_url: user.imageUrl,
+        avatar_url: user.imageUrl || "",
         household_id: household.id,
       });
 
@@ -101,7 +101,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
       const { error: userError } = await supabase.from("users").upsert({
         clerk_id: user.id,
         name: user.fullName || user.firstName || "User",
-        avatar_url: user.imageUrl,
+        avatar_url: user.imageUrl || "",
         household_id: household.id,
       });
 

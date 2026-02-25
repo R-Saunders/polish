@@ -47,9 +47,18 @@ export function Leaderboard({ members, currentUserId }: LeaderboardProps) {
                 {getMedalEmoji(index)}
               </span>
 
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-indigo-400 to-purple-400 text-lg font-bold">
-                {member.name?.[0]?.toUpperCase() || "?"}
-              </div>
+              {member.avatar_url ? (
+                <img
+                  src={member.avatar_url}
+                  alt={member.name || "User"}
+                  className="h-10 w-10 shrink-0 rounded-full object-cover"
+                  referrerPolicy="no-referrer"
+                />
+              ) : (
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-400 to-purple-400 text-lg font-bold">
+                  {member.name?.[0]?.toUpperCase() || "?"}
+                </div>
+              )}
 
               <div className="flex-1">
                 <p className="font-medium">

@@ -40,6 +40,14 @@ export function Dashboard() {
       if (!userData) return;
       setCurrentUser(userData as User);
 
+      // Sync Avatar if changed
+      if (clerkUser.imageUrl && userData.avatar_url !== clerkUser.imageUrl) {
+        await supabase
+          .from("users")
+          .update({ avatar_url: clerkUser.imageUrl })
+          .eq("id", userData.id);
+      }
+
       // Get household
       const { data: householdData } = await supabase
         .from("households")
