@@ -10,6 +10,7 @@ import { AddRoomModal } from "./AddRoomModal";
 import { AddTaskModal } from "./AddTaskModal";
 import { HolidayBanner } from "./HolidayBanner";
 import { Leaderboard } from "./Leaderboard";
+import { HouseholdSettingsModal } from "./HouseholdSettingsModal";
 
 export function Dashboard() {
   const { user: clerkUser } = useUser();
@@ -21,6 +22,7 @@ export function Dashboard() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [showAddRoom, setShowAddRoom] = useState(false);
   const [showAddTask, setShowAddTask] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"today" | "tasks" | "leaderboard">(
     "today"
@@ -279,15 +281,13 @@ export function Dashboard() {
               </p>
               <p className="text-xs text-slate-400">streak</p>
             </div>
-            {!household?.holiday_mode && (
-              <button
-                onClick={toggleHolidayMode}
-                className="btn-secondary text-sm"
-                title="Enable holiday mode"
-              >
-                🏖️ Holiday
-              </button>
-            )}
+            <button
+              onClick={() => setShowSettings(true)}
+              className="btn-secondary px-3 text-sm"
+              title="Household Settings"
+            >
+              ⚙️
+            </button>
           </div>
         </div>
       </div>
@@ -438,6 +438,14 @@ export function Dashboard() {
             setSelectedRoomId(null);
             loadData();
           }}
+        />
+      )}
+
+      {showSettings && household && (
+        <HouseholdSettingsModal
+          household={household}
+          onClose={() => setShowSettings(false)}
+          onToggleHolidayMode={toggleHolidayMode}
         />
       )}
     </div>
