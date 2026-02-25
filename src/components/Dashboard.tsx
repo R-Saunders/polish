@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useUser } from "@clerk/nextjs";
-import { supabase } from "@/lib/supabase";
+import { useUser, useAuth } from "@clerk/nextjs";
+import { createClerkSupabaseClient } from "@/lib/supabase";
 import { getNextDueDate } from "@/lib/scheduling";
 import type { Household, Room, Task, User } from "@/types";
 import { RoomCard } from "./RoomCard";
@@ -13,6 +13,7 @@ import { Leaderboard } from "./Leaderboard";
 
 export function Dashboard() {
   const { user: clerkUser } = useUser();
+  const { getToken } = useAuth();
   const [household, setHousehold] = useState<Household | null>(null);
   const [rooms, setRooms] = useState<Room[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -30,6 +31,9 @@ export function Dashboard() {
     if (!clerkUser) return;
 
     try {
+      const token = await getToken({ template: "supabase" });
+      const supabase = createClerkSupabaseClient(token || "");
+
       // Get current user
       const { data: userData } = await supabase
         .from("users")
@@ -90,7 +94,7 @@ export function Dashboard() {
     } finally {
       setLoading(false);
     }
-  }, [clerkUser]);
+  }, [clerkUser, getToken]);
 
   useEffect(() => {
     loadData();
@@ -98,6 +102,9 @@ export function Dashboard() {
 
   const toggleHolidayMode = async () => {
     if (!household) return;
+
+    const token = await getToken({ template: "supabase" });
+    const supabase = createClerkSupabaseClient(token || "");
 
     const newHolidayMode = !household.holiday_mode;
 
@@ -117,6 +124,9 @@ export function Dashboard() {
 
     const task = tasks.find((t) => t.id === taskId);
     if (!task) return;
+
+    const token = await getToken({ template: "supabase" });
+    const supabase = createClerkSupabaseClient(token || "");
 
     // Add completion record
     await supabase.from("completions").insert({
@@ -147,6 +157,9 @@ export function Dashboard() {
     const task = tasks.find((t) => t.id === taskId);
     if (!task) return;
 
+    const token = await getToken({ template: "supabase" });
+    const supabase = createClerkSupabaseClient(token || "");
+
     // Add completion record with 0 points (skipped)
     await supabase.from("completions").insert({
       task_id: taskId,
@@ -170,6 +183,9 @@ export function Dashboard() {
     if (!task) return;
 
     const nextDue = getNextDueDate(task);
+
+    const token = await getToken({ template: "supabase" });
+    const supabase = createClerkSupabaseClient(token || "");
 
     // Add completion record (Points tracked NOW)
     await supabase.from("completions").insert({

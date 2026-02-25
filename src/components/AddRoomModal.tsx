@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { useAuth } from "@clerk/nextjs";
+import { createClerkSupabaseClient } from "@/lib/supabase";
 
 interface AddRoomModalProps {
   householdId: string;
@@ -26,6 +27,7 @@ export function AddRoomModal({
   onClose,
   onSave,
 }: AddRoomModalProps) {
+  const { getToken } = useAuth();
   const [name, setName] = useState("");
   const [icon, setIcon] = useState("🏠");
   const [color, setColor] = useState("#6366f1");
@@ -42,6 +44,9 @@ export function AddRoomModal({
 
     setLoading(true);
     try {
+      const token = await getToken({ template: "supabase" });
+      const supabase = createClerkSupabaseClient(token || "");
+
       await supabase.from("rooms").insert({
         household_id: householdId,
         name: name.trim(),

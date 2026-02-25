@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { useAuth } from "@clerk/nextjs";
+import { createClerkSupabaseClient } from "@/lib/supabase";
 import {
   choreLibrary,
   getAllCategories,
@@ -23,6 +24,7 @@ export function AddTaskModal({
   onClose,
   onSave,
 }: AddTaskModalProps) {
+  const { getToken } = useAuth();
   const [mode, setMode] = useState<"library" | "custom">("library");
   const [selectedCategory, setSelectedCategory] = useState(
     suggestCategoryForRoom(roomName)
@@ -79,6 +81,9 @@ export function AddTaskModal({
 
     setLoading(true);
     try {
+      const token = await getToken({ template: "supabase" });
+      const supabase = createClerkSupabaseClient(token || "");
+
       await supabase.from("tasks").insert({
         room_id: roomId,
         name: name.trim(),
