@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import type { User } from "@/types";
 
 interface LeaderboardProps {
@@ -48,9 +49,11 @@ export function Leaderboard({ members, currentUserId }: LeaderboardProps) {
               </span>
 
               {member.avatar_url ? (
-                <img
+                <Image
                   src={member.avatar_url}
                   alt={member.name || "User"}
+                  width={40}
+                  height={40}
                   className="h-10 w-10 shrink-0 rounded-full object-cover"
                   referrerPolicy="no-referrer"
                 />
