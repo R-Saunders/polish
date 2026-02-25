@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { useUser } from "@clerk/nextjs";
-import { supabase } from "@/lib/supabase";
+import { useUser, useAuth } from "@clerk/nextjs";
+import { createClerkSupabaseClient } from "@/lib/supabase";
 import type { Pet } from "@/types";
 
 interface OnboardingFlowProps {
@@ -13,6 +13,7 @@ type Step = "choice" | "create" | "join" | "personalise";
 
 export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   const { user } = useUser();
+  const { getToken } = useAuth();
   const [step, setStep] = useState<Step>("choice");
   const [householdName, setHouseholdName] = useState("");
   const [inviteCode, setInviteCode] = useState("");
@@ -46,6 +47,9 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
     setError("");
 
     try {
+      const token = await getToken({ template: "supabase" });
+      const supabase = createClerkSupabaseClient(token || "");
+
       // Create household
       const { data: household, error: householdError } = await supabase
         .from("households")
@@ -85,6 +89,9 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
     setError("");
 
     try {
+      const token = await getToken({ template: "supabase" });
+      const supabase = createClerkSupabaseClient(token || "");
+
       // Find household by invite code
       const { data: household, error: findError } = await supabase
         .from("households")
